@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="480.0" styleClass="root" stylesheets="@application.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.Controller">
+   <children>
+      <HBox>
+         <children>
+            <Button mnemonicParsing="false" onAction="#show_audiobooks" text="Show Audiobooks" />
+            <Label maxHeight="25.0" maxWidth="1.0" minHeight="25.0" minWidth="1.0" prefHeight="25.0" prefWidth="1.0" styleClass="v_div" stylesheets="@application.css" text="v_div" />
+         </children>
+      </HBox>
+      <Label maxHeight="1.0" maxWidth="1.7976931348623157E308" minHeight="1.0" prefHeight="1.0" styleClass="h_div" stylesheets="@application.css" text="h_div" />
+      <Label text="Bookmarks:">
+         <opaqueInsets>
+            <Insets />
+         </opaqueInsets>
+         <VBox.margin>
+            <Insets left="5.0" />
+         </VBox.margin>
+      </Label>
+      <FlowPane fx:id="player_bookmark_flow" prefHeight="62.0" prefWidth="480.0" />
+      <Label maxHeight="1.0" maxWidth="1.7976931348623157E308" minHeight="1.0" prefHeight="1.0" styleClass="h_div" stylesheets="@application.css" text="h_div" />
+      <HBox fx:id="miniplayer" alignment="CENTER_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#play_pause" prefHeight="130.0" prefWidth="480.0" styleClass="root" stylesheets="@application.css">
+         <children>
+            <StackPane>
+               <children>
+                  <ImageView fx:id="player_cover" fitHeight="128.0" fitWidth="96.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../images/Google%20icons/drawable-xxhdpi/ic_action_picture.png" />
+                     </image>
+                  </ImageView>
+                  <ImageView fx:id="player_overCover" fitHeight="128.0" fitWidth="35.0" pickOnBounds="true" preserveRatio="true" />
+               </children>
+            </StackPane>
+            <Label maxHeight="1.7976931348623157E308" maxWidth="1.0" minWidth="1.0" prefWidth="1.0" styleClass="v_div" text="v_div" />
+            <VBox alignment="CENTER_LEFT" prefHeight="130.0" prefWidth="384.0">
+               <children>
+                  <HBox alignment="CENTER_LEFT" prefHeight="24.0" prefWidth="305.0">
+                     <children>
+                        <ImageView fitHeight="24.0" fitWidth="22.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/Google%20icons/drawable-xhdpi/ic_action_person.png" />
+                           </image>
+                        </ImageView>
+                        <Text fx:id="player_author" fill="WHITE" fontSmoothingType="LCD" smooth="false" strokeType="OUTSIDE" strokeWidth="0.0" text="Author" wrappingWidth="347.591796875">
+                           <HBox.margin>
+                              <Insets />
+                           </HBox.margin>
+                           <font>
+                              <Font size="18.0" />
+                           </font>
+                        </Text>
+                     </children>
+                  </HBox>
+                  <Label maxHeight="1.0" maxWidth="1.7976931348623157E308" minHeight="1.0" prefHeight="1.0" styleClass="h_div" stylesheets="@application.css" text="h_div" />
+                  <HBox alignment="CENTER_LEFT" prefHeight="24.0" prefWidth="305.0">
+                     <children>
+                        <ImageView fitHeight="24.0" fitWidth="22.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/Google%20icons/drawable-xhdpi/ic_action_labels.png" />
+                           </image>
+                        </ImageView>
+                        <Text fx:id="player_album" fill="WHITE" fontSmoothingType="LCD" smooth="false" strokeType="OUTSIDE" strokeWidth="0.0" text="Album" wrappingWidth="347.591796875">
+                           <HBox.margin>
+                              <Insets />
+                           </HBox.margin>
+                           <font>
+                              <Font size="14.0" />
+                           </font>
+                        </Text>
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+         </children>
+      </HBox>
+      <Label maxHeight="1.0" maxWidth="1.7976931348623157E308" minHeight="1.0" prefHeight="1.0" styleClass="h_div" stylesheets="@application.css" text="h_div" />
+      <HBox alignment="CENTER_LEFT" prefHeight="25.0" prefWidth="480.0">
+         <children>
+            <Button fx:id="btn_prev" maxHeight="25.0" maxWidth="100.0" minHeight="25.0" minWidth="50.0" mnemonicParsing="false" onAction="#prev" prefHeight="25.0" prefWidth="75.0" text="Previous" textAlignment="CENTER" />
+            <Label maxHeight="25.0" maxWidth="1.0" minHeight="25.0" minWidth="1.0" prefHeight="25.0" prefWidth="1.0" styleClass="v_div" stylesheets="@application.css" text="v_div" />
+            <ImageView fitHeight="24.0" fitWidth="22.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../images/Custom/drawable-xhdpi/ic_action_node.png" />
+               </image>
+            </ImageView>
+            <Text fx:id="player_track" fill="WHITE" fontSmoothingType="LCD" strokeType="OUTSIDE" strokeWidth="0.0" text="Title" wrappingWidth="274.44140625" HBox.hgrow="NEVER">
+               <HBox.margin>
+                  <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+               </HBox.margin>
+            </Text>
+            <Label maxHeight="1.0" maxWidth="1.0" minHeight="25.0" minWidth="1.0" prefHeight="25.0" prefWidth="1.0" styleClass="v_div" text="v_div" />
+            <Button fx:id="btn_next" maxHeight="25.0" maxWidth="100.0" minHeight="25.0" minWidth="50.0" mnemonicParsing="false" onAction="#next" prefHeight="25.0" prefWidth="75.0" text="Next" textAlignment="CENTER" />
+         </children>
+      </HBox>
+      <Label maxHeight="1.0" maxWidth="1.7976931348623157E308" minHeight="1.0" prefHeight="1.0" styleClass="h_div" stylesheets="@application.css" text="h_div" />
+      <FlowPane fx:id="player_track_flow" hgap="15.0" prefHeight="200.0" prefWidth="480.0" vgap="15.0" />
+      <Label maxHeight="1.0" maxWidth="1.7976931348623157E308" minHeight="1.0" prefHeight="1.0" styleClass="h_div" stylesheets="@application.css" text="h_div" />
+      <HBox alignment="CENTER_LEFT" prefHeight="24.0" prefWidth="305.0">
+         <children>
+            <ImageView fitHeight="24.0" fitWidth="22.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../images/Google%20icons/drawable-xhdpi/ic_action_time.png" />
+               </image>
+            </ImageView>
+            <Text fx:id="player_time" fill="WHITE" fontSmoothingType="LCD" smooth="false" strokeType="OUTSIDE" strokeWidth="0.0" text="00:00" wrappingWidth="108.591796875" />
+         </children>
+      </HBox>
+   </children>
+</VBox>

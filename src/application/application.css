@@ -1,0 +1,54 @@
+.root{
+	-fx-background-color: #000000;
+}
+
+.text{
+	-fx-fill: #FFFFFF;
+}
+
+.bordered{
+	-fx-background-color: #000000;
+	-fx-border-width: 1;
+	-fx-border-color: #FFFFFF;
+	-fx-border-insets: 1, 1, 1, 1;
+}
+
+.label{
+	-fx-background-color: #000000;
+	-fx-text-fill: #FFFFFF;
+}
+
+.button{
+	-fx-background-color: #000000;
+	-fx-text-fill: #FFFFFF;
+}
+
+.node{
+	-fx-background-color: #000000;
+}
+
+.text_large{
+	-fx-font: 28px Roboto;
+}
+
+.text_medium{
+	-fx-font: 22px Roboto;
+}
+
+.lbl{
+	-fx-font: 12px Roboto;
+}
+
+.v_div{
+	-fx-background-color: linear-gradient(from 50% 0% to 50% 100%, black, white, black);
+}
+
+.h_div{
+	-fx-background-color: linear-gradient(from 0% 50% to 100% 50%, white, black);
+}
+
+.bordered{
+	-fx-border-width: 1; 
+	-fx-border-color: #FFFFFF; 
+	-fx-border-radius: 15;
+}

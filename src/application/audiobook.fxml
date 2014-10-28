@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+
+<ScrollPane hbarPolicy="NEVER" maxHeight="1.7976931348623157E308" maxWidth="400.0" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" styleClass="root" stylesheets="@application.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+   <content>
+      <VBox fx:id="root" alignment="TOP_CENTER" maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefWidth="300.0" styleClass="root" stylesheets="@application.css">
+         <children>
+            <Label maxWidth="400.0" minWidth="-Infinity" prefWidth="300.0" styleClass="lbl" text="Author:" />
+            <Text fx:id="audiobook_author_txt" fill="WHITE" strokeType="OUTSIDE" strokeWidth="0.0" text="Author" textAlignment="CENTER">
+               <font>
+                  <Font size="36.0" />
+               </font>
+            </Text>
+            <Label maxWidth="400.0" minWidth="-Infinity" prefWidth="300.0" styleClass="lbl" text="Album:" />
+            <Text fx:id="audiobook_album_txt" fill="WHITE" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="text_medium" text="Album" textAlignment="CENTER" wrappingWidth="300.0">
+               <font>
+                  <Font size="24.0" />
+               </font>
+            </Text>
+            <Label maxWidth="400.0" minWidth="-Infinity" prefWidth="300.0" styleClass="lbl" text="Cover:" />
+            <ImageView fx:id="audiobook_cover" fitHeight="144.0" fitWidth="96.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../images/Google%20icons/drawable-xhdpi/ic_action_help.png" />
+               </image>
+            </ImageView>
+            <Label maxWidth="400.0" minWidth="-Infinity" prefWidth="300.0" styleClass="lbl" text="Tracks:" />
+            <VBox fx:id="audiobook_track_list" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="300.0">
+               <VBox.margin>
+                  <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+               </VBox.margin>
+            </VBox>
+         </children>
+      </VBox>
+   </content>
+</ScrollPane>
