@@ -30,6 +30,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Rectangle;
@@ -37,6 +38,7 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import model.Audiobook;
 import model.AudiobookManager;
+import model.Track;
 
 public class Helper_Audibooks {
 
@@ -105,7 +107,8 @@ public class Helper_Audibooks {
 						public void handle(MouseEvent event) {
 							if(event.getButton() == MouseButton.PRIMARY){
 								audiobooksStage.close();
-								controller.selectAudiobook(audiobook);
+								controller.selectAudiobook(audiobook, 0, 0);
+								//When an audiobook is selected it is always at trackNo = 0, progress = 0.
 							} else if(event.getButton() == MouseButton.SECONDARY){
 								
 								ContextMenu cm = new ContextMenu();
@@ -165,6 +168,63 @@ public class Helper_Audibooks {
 					}
 				});
 			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void new_audiobook(Controller controller){
+		File folder = controller.selectFolder();
+		AudiobookManager am = AudiobookManager.getInstance();
+		Audiobook audiobook = am.autoCreateAudiobook(folder, true);
+		if(audiobook != null) {
+			am.addAudiobook(audiobook);
+			am.saveAudiobooks();
+		}
+
+		if(audiobook == null) return;
+
+		//Display selected audiobook
+		try {
+			FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("audiobook.fxml"));
+			ScrollPane root = fxmlLoader.load();
+			root.setStyle("-fx-background: rgb(0,0,0);");
+
+			//Author
+			Text author_txt = (Text) fxmlLoader.getNamespace().get("audiobook_author_txt");
+			author_txt.setText(audiobook.getAuthor());
+			//Album
+			Text album_txt = (Text) fxmlLoader.getNamespace().get("audiobook_album_txt");
+			album_txt.setText(audiobook.getAlbum());
+			//Cover
+			ImageView cover_iv = (ImageView) fxmlLoader.getNamespace().get("audiobook_cover");
+
+			File cover_file = new File(audiobook.getCover());
+			if(cover_file != null){
+				FileInputStream cover_inputstream = new FileInputStream(cover_file);
+				Image image = new Image(cover_inputstream);
+				cover_iv.setImage(image);
+			}
+			//Tracks
+			VBox track_list = (VBox) fxmlLoader.getNamespace().get("audiobook_track_list");
+			track_list.setPrefHeight(24*audiobook.getPlaylist().size());
+			for(int i = 0; i < audiobook.getPlaylist().size(); i++){
+				Track track = audiobook.getPlaylist().get(i);
+				int pos = i+1;
+				FXMLLoader fxmlTrackLoader = new FXMLLoader(getClass().getResource("track_item.fxml"));
+				HBox item = fxmlTrackLoader.load();
+				Text pos_txt = (Text) fxmlTrackLoader.getNamespace().get("track_item_pos");
+				Text title_txt = (Text) fxmlTrackLoader.getNamespace().get("track_item_title");
+
+				pos_txt.setText(String.format("%02d", pos));
+				title_txt.setText(track.getTitle());
+				track_list.getChildren().add(item);
+			}
+
+			Scene scene = new Scene(root);
+			Stage stage = new Stage();
+			stage.setScene(scene);
+			stage.show();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

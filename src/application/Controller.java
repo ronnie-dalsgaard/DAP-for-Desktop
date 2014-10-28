@@ -1,43 +1,44 @@
 package application;
 
-import static application.Constants.*;
+import static application.Constants.HOME;
+import static application.Constants.ICON_PAUSE_OVER_VIDEO;
+import static application.Constants.ICON_PLAY_OVER_VIDEO;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.concurrent.TimeUnit;
 
-import javax.swing.GroupLayout.Alignment;
-
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Control;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import model.Audiobook;
 import model.AudiobookManager;
 import model.Bookmark;
 import model.BookmarkManager;
 import model.Track;
+import support.Monitor;
+import support.Time;
 
 
 public class Controller implements Initializable {
@@ -55,24 +56,39 @@ public class Controller implements Initializable {
 
 	private Audiobook currentAudiobook = null;
 	private Track currentTrack = null;
-	private int currentTrackno = 0;
+	private int currentTrackno = -1;
 	private static MediaPlayer mp = null;
+	private static Monitor progress_monitor = null;
+	private static Monitor bookmark_monitor = null;
+	private static boolean firstRun = true;
 
 	@Override
-	public void initialize(URL url, ResourceBundle resourceBundle) {
+ 	public void initialize(URL url, ResourceBundle resourceBundle) {
+		if(firstRun){
+			firstRun = false;
+			AudiobookManager.getInstance().loadAudiobooks();
+			BookmarkManager.getInstance().loadBookmarks();
+		}
 		showBookmarks();
+		if(bookmark_monitor == null){
+			bookmark_monitor = new Bookmark_monitor();
+			bookmark_monitor.start();
+		}
 	}
 
 	//Selected Audiobook
-	public void selectAudiobook(Audiobook audiobook){
+	public void selectAudiobook(Audiobook audiobook, int trackNo, int progress){
 		currentAudiobook = audiobook;
-		currentTrackno = 0;
+		currentTrackno = trackNo;
 		currentTrack = audiobook.getPlaylist().getFirst();
 		showAudiobook();
 		showTracks();
 		showIsPaused();
-		setTrack();
+		setTrack(trackNo, progress);
+		showTime(progress, -1);
 	}
+	
+	//Display functions
 	private void showAudiobook(){
 		if(currentAudiobook == null) return;
 		player_author.setText(currentAudiobook.getAuthor());
@@ -93,6 +109,15 @@ public class Controller implements Initializable {
 				l.getStyleClass().add("bordered");
 			} else {
 				l.setStyle(null);
+				//Only set onclicklistener to tracks other than the one currently playing
+				final int trackNo = i;
+				l.setOnMouseClicked(new EventHandler<MouseEvent>() {
+
+					@Override
+					public void handle(MouseEvent event) {
+						setTrack(trackNo, 0);
+					}
+				});
 			}
 			player_track_flow.getChildren().add(l);
 		}
@@ -133,7 +158,13 @@ public class Controller implements Initializable {
 			e.printStackTrace();
 		}
 	}
-
+	private void showTime(int progress, int duration){
+		String _progress = Time.toString(progress);
+		String _duration = Time.toString(duration);
+		
+		player_time.setText(_progress + (duration < 0 ? "" : " / " + _duration));
+	}
+	
 	//Player functions
 	@FXML
 	private void play_pause(MouseEvent event) {
@@ -141,11 +172,11 @@ public class Controller implements Initializable {
 		if(mp != null && mp.getStatus() == MediaPlayer.Status.PLAYING){
 			mp.pause();
 			showIsPaused();
-		} else if(mp != null && mp.getStatus() == MediaPlayer.Status.PAUSED){
+		} else if(mp != null && mp.getStatus() != MediaPlayer.Status.PLAYING){
 			mp.play();
 			showIsPlaying();
-		} else { 
-			setTrack();
+		} else { //mp is null
+			setTrack(currentTrackno, 0); //set progress to 0
 			mp.play();
 			showIsPlaying();
 		}
@@ -155,11 +186,8 @@ public class Controller implements Initializable {
 		if(currentAudiobook.getPlaylist().getFirst().equals(currentTrack)) return;
 
 		int nextTrackNo = currentTrackno - 1;
-		Track nextTrack = currentAudiobook.getPlaylist().get(nextTrackNo);
-		currentTrackno = nextTrackNo;
-		currentTrack = nextTrack;
-		showTracks();
-		setTrack();
+		
+		setTrack(nextTrackNo, 0);
 	}
 	@FXML
 	private void next(ActionEvent event){
@@ -167,25 +195,35 @@ public class Controller implements Initializable {
 		if(currentAudiobook.getPlaylist().getLast().equals(currentTrack)) return;
 
 		int nextTrackNo = currentTrackno + 1;
-		Track nextTrack = currentAudiobook.getPlaylist().get(nextTrackNo);
-		currentTrackno = nextTrackNo;
-		currentTrack = nextTrack;
-		showTracks();
-		setTrack();
+		
+		setTrack(nextTrackNo, 0);
 	}
-	private void setTrack(){
-		System.out.println(currentTrack);
+	private void setTrack(int trackNo, int progress){
+		//Start progress monitor
+		System.out.println("Starting progress monitor");
+		if(progress_monitor != null) progress_monitor.kill();
+		progress_monitor = new Progress_monitor();
+		progress_monitor.start();
+		
+		//Stop current playback
 		if(mp != null && mp.getStatus() == MediaPlayer.Status.PLAYING){
 			mp.stop();
 			showIsPaused();
 		}
+		
+		//instantiate new data
+		currentTrackno = trackNo;
+		currentTrack = currentAudiobook.getPlaylist().get(trackNo);
+		showTracks();
+		
 		File file = new File(currentTrack.getPath());
 		Media media = new Media(file.toURI().toString());
 		mp = new MediaPlayer(media);
+		mp.setStartTime(new Duration(progress));
 		currentTrack.setDuration((int)mp.getTotalDuration().toMillis());
 	}
 	
-	//Audiobooks
+	//Audiobooks - has Helper
 	@FXML
 	private void show_audiobooks(ActionEvent event){
 		new Helper_Audibooks().showAudiobooks(this);
@@ -195,72 +233,13 @@ public class Controller implements Initializable {
 	}
 	@FXML 
 	public void new_audiobook(){
-		File folder = selectFolder();
-		AudiobookManager am = AudiobookManager.getInstance();
-		Audiobook audiobook = am.autoCreateAudiobook(folder, true);
-		if(audiobook != null) {
-			am.addAudiobook(audiobook);
-			am.saveAudiobooks();
-		}
-
-		if(audiobook == null) return;
-
-		//Display selected audiobook
-		try {
-			FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("audiobook.fxml"));
-			ScrollPane root = fxmlLoader.load();
-			root.setStyle("-fx-background: rgb(0,0,0);");
-
-			//Author
-			Text author_txt = (Text) fxmlLoader.getNamespace().get("audiobook_author_txt");
-			author_txt.setText(audiobook.getAuthor());
-			//Album
-			Text album_txt = (Text) fxmlLoader.getNamespace().get("audiobook_album_txt");
-			album_txt.setText(audiobook.getAlbum());
-			//Cover
-			ImageView cover_iv = (ImageView) fxmlLoader.getNamespace().get("audiobook_cover");
-
-			File cover_file = new File(audiobook.getCover());
-			if(cover_file != null){
-				FileInputStream cover_inputstream = new FileInputStream(cover_file);
-				Image image = new Image(cover_inputstream);
-				cover_iv.setImage(image);
-			}
-			//Tracks
-			VBox track_list = (VBox) fxmlLoader.getNamespace().get("audiobook_track_list");
-			track_list.setPrefHeight(24*audiobook.getPlaylist().size());
-			for(int i = 0; i < audiobook.getPlaylist().size(); i++){
-				Track track = audiobook.getPlaylist().get(i);
-				int pos = i+1;
-				FXMLLoader fxmlTrackLoader = new FXMLLoader(getClass().getResource("track_item.fxml"));
-				HBox item = fxmlTrackLoader.load();
-				Text pos_txt = (Text) fxmlTrackLoader.getNamespace().get("track_item_pos");
-				Text title_txt = (Text) fxmlTrackLoader.getNamespace().get("track_item_title");
-
-				pos_txt.setText(String.format("%02d", pos));
-				title_txt.setText(track.getTitle());
-				track_list.getChildren().add(item);
-			}
-
-			Scene scene = new Scene(root);
-			Stage stage = new Stage();
-			stage.setScene(scene);
-			stage.show();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-
+		new Helper_Audibooks().new_audiobook(this);
 	}
 
 	//Bookmarks
 	private void showBookmarks(){
 		if(player_bookmark_flow == null) return;
-		BookmarkManager bm = BookmarkManager.getInstance();
-		for(int i = 0; i < 2; i++){
-			Bookmark b = new Bookmark("Rick Riordan", "album"+i, 2+i, 10000);
-			bm.createOrUpdateBookmark(b, true);			
-		}
+		player_bookmark_flow.getChildren().clear();
 
 		for(int i = 0; i < BookmarkManager.getBookmarks().size(); i++){
 			Bookmark bookmark = BookmarkManager.getBookmarks().get(i);
@@ -279,16 +258,41 @@ public class Controller implements Initializable {
 		try{
 			FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("bookmark.fxml"));
 			HBox bookmark_root = fxmlLoader.load();
+			
+			//Cover
+			ImageView cover_iv = (ImageView) fxmlLoader.getNamespace().get("bookmark_cover");
+			Audiobook audiobook = AudiobookManager.getInstance().getAudiobook(bookmark);
+			if(audiobook != null && audiobook.getCover() != null){
+				File file = new File(audiobook.getCover());
+				FileInputStream inputstream = new FileInputStream(file);
+				Image image = new Image(inputstream);
+				cover_iv.setImage(image);
+			}
+			
+			//Track number
 			Text trackno = (Text) fxmlLoader.getNamespace().get("bookmark_trackno");
-			trackno.setText(String.format("%02d", bookmark.getTrackno()));
+			trackno.setText(String.format("%02d", bookmark.getTrackno()+1));
+			
+			//Progress
+			Text time = (Text) fxmlLoader.getNamespace().get("bookmark_time");
+			time.setText(Time.toString(bookmark.getProgress()));
+			
 			player_bookmark_flow.getChildren().add(bookmark_root);
+			
+			bookmark_root.setOnMouseClicked(new EventHandler<MouseEvent>() {
+
+				@Override
+				public void handle(MouseEvent event) {
+					selectAudiobook(audiobook, bookmark.getTrackno(), bookmark.getProgress());
+				}
+			});
 		} catch(IOException e) {
 			e.printStackTrace();
 		}
 	}
-
+		
 	//Support
-	private File selectFolder(){
+	public  File selectFolder(){
 		DirectoryChooser chooser = new DirectoryChooser();
 		chooser.setTitle("New Audiobook");
 		File defaultFolder = HOME;
@@ -297,4 +301,73 @@ public class Controller implements Initializable {
 		return folder;
 	}
 
+	//Monitors
+	class Progress_monitor extends Monitor{
+
+		public Progress_monitor() {
+			super(1, TimeUnit.SECONDS);
+		}
+
+		@Override
+		public void execute() {
+			if(mp == null) return;
+			if(player_time == null) return;
+			
+			Platform.runLater(new Runnable() {
+				
+				@Override
+				public void run() {
+					int progress = (int) mp.getCurrentTime().toMillis();
+					int duration = (int) mp.getTotalDuration().toMillis();
+					System.out.println("Progress monitor: "+progress + " / " + duration);
+					showTime(progress, duration);
+				}
+			});
+			
+		}
+	}
+	class Bookmark_monitor extends Monitor{
+		private boolean go_again = true;
+		
+		public Bookmark_monitor() {
+			super(5, TimeUnit.SECONDS);
+		}
+
+		@Override
+		public void execute() {
+			if(mp == null) return;
+			if(!go_again && !(mp.getStatus() == MediaPlayer.Status.PLAYING)) return;
+			if(currentAudiobook == null) return;
+			if(currentTrack == null) return;
+			if(currentTrackno < 0) return;
+			
+			BookmarkManager manager = BookmarkManager.getInstance();
+			String author = currentAudiobook.getAuthor();
+			String album = currentAudiobook.getAlbum();
+			int trackno = currentTrackno;
+			int progress = 0;
+			Duration progress_duration = mp.getCurrentTime();
+			if(progress_duration != null){				
+				progress = (int) progress_duration.toMillis();
+			}
+			boolean force = false; //only update bookmark if progress is greater than previously recorded
+			if(trackno > 0 || progress > 0){ //only update bookmark if playback has started
+				Bookmark bookmark = manager.createOrUpdateBookmark(author, album, trackno, progress, force);
+				System.out.println("Bookmark created or updated: "+bookmark);
+				
+				Platform.runLater(new Runnable() {
+					
+					@Override
+					public void run() {
+						showBookmarks();
+					}
+				});
+			}
+			
+			go_again = mp.getStatus() == MediaPlayer.Status.PLAYING;
+		}
+		
+	}
 }
+
+
