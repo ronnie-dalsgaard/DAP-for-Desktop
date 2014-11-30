@@ -1,6 +1,5 @@
 package model;
 
-import static application.Constants.HOME;
 import static application.Constants.WORKINGFOLDER;
 
 import java.io.BufferedReader;
@@ -14,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 
 import support.AlbumFolderFilter;
@@ -36,6 +36,14 @@ public final class AudiobookManager extends Data{
 		if(Data.getAudiobooks().contains(audiobook)) return;
 		audiobooks.add(audiobook);
 		authors.add(audiobook.getAuthor());
+		saveAudiobooks();
+	}
+	public void addAllAudiobooks(Collection<Audiobook> collection){
+		for(Audiobook audiobook : collection){
+			if(audiobooks.contains(audiobook)) continue;
+			audiobooks.add(audiobook);
+			authors.add(audiobook.getAuthor());
+		}
 		saveAudiobooks();
 	}
 	public Audiobook getAudiobook(String author, String album){
@@ -69,6 +77,15 @@ public final class AudiobookManager extends Data{
 	public void removeAudiobook(Audiobook audiobook) { 
 		audiobooks.remove(audiobook);
 		authors.remove(audiobook.getAuthor());
+		saveAudiobooks();
+	}
+	public void removeAllAudiobooks(){
+		ArrayList<Audiobook> trash = new ArrayList<Audiobook>();
+		trash.addAll(audiobooks);
+		for(Audiobook audiobook : trash){
+			audiobooks.remove(audiobook);
+			authors.remove(audiobook.getAuthor());
+		}
 		saveAudiobooks();
 	}
 	
@@ -176,16 +193,17 @@ public final class AudiobookManager extends Data{
 		audiobook.setPlaylist(playlist);
 		return audiobook;
 	}
-	public ArrayList<Audiobook> autodetect(){
+	public ArrayList<Audiobook> autodetect(File folder){
 		ArrayList<Audiobook> list = new ArrayList<Audiobook>();
 
-		ArrayList<File> albums = collectFiles(new ArrayList<File>(), HOME, new AlbumFolderFilter());
+		ArrayList<File> albums = collectFiles(new ArrayList<File>(), folder, new AlbumFolderFilter());
 		for(File album_folder : albums){
 			Audiobook audiobook = autoCreateAudiobook(album_folder, true);
-			if(audiobook != null) list.add(audiobook);
+			list.add(audiobook);
 		}		
 		return list;
 	}
+	
 	private ArrayList<File> collectFiles(ArrayList<File> list, File folder, FileFilter filter){
 		if(list == null) throw new IllegalArgumentException("Must have a list");
 		if(folder == null) throw new IllegalArgumentException("Must have a root folder");

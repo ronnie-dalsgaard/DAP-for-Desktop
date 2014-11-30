@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -100,7 +101,7 @@ public class BookmarkManager extends Data{ //Singleton
 	
 	//Load and save bookmarks
 	public ArrayList<Bookmark> loadBookmarks(){
-		File file = new File(WORKINGFOLDER, "bookmarks.dap");
+		File file = new File(WORKINGFOLDER, "bookmarks.dap");		
 		try {
 			FileInputStream stream = new FileInputStream(file);
 			InputStreamReader reader = new InputStreamReader(stream);
@@ -111,9 +112,11 @@ public class BookmarkManager extends Data{ //Singleton
 			bookmarks.addAll(list);
 			in.close();
 			return bookmarks;
+		} catch (FileNotFoundException e){
+			return new ArrayList<Bookmark>();
 		} catch (IOException e) {
 			e.printStackTrace();
-			return null;
+			return new ArrayList<Bookmark>();
 		}
 	}
 	public boolean saveBookmarks(){

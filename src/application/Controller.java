@@ -1,13 +1,15 @@
 package application;
 
-import static application.Constants.HOME;
 import static application.Constants.ICON_PAUSE_OVER_VIDEO;
 import static application.Constants.ICON_PLAY_OVER_VIDEO;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
 
@@ -29,8 +31,6 @@ import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 import model.Audiobook;
 import model.AudiobookManager;
@@ -41,7 +41,7 @@ import support.Monitor;
 import support.Time;
 
 
-public class Controller implements Initializable {
+public class Controller extends Audiobooks implements Initializable {
 	@FXML private Label label;
 	@FXML private FlowPane player_track_flow;
 	@FXML private FlowPane player_bookmark_flow;
@@ -61,9 +61,10 @@ public class Controller implements Initializable {
 	private static Monitor progress_monitor = null;
 	private static Monitor bookmark_monitor = null;
 	private static boolean firstRun = true;
+	
 
 	@Override
- 	public void initialize(URL url, ResourceBundle resourceBundle) {
+  	public void initialize(URL url, ResourceBundle resourceBundle) {
 		if(firstRun){
 			firstRun = false;
 			AudiobookManager.getInstance().loadAudiobooks();
@@ -223,21 +224,8 @@ public class Controller implements Initializable {
 		currentTrack.setDuration((int)mp.getTotalDuration().toMillis());
 	}
 	
-	//Audiobooks - has Helper
-	@FXML
-	private void show_audiobooks(ActionEvent event){
-		new Helper_Audibooks().showAudiobooks(this);
-	}	
-	public void updateAudiobooks(FlowPane flow, Stage audiobooksStage) {
-		new Helper_Audibooks().updateAudiobooks(this, flow, audiobooksStage);
-	}
-	@FXML 
-	public void new_audiobook(){
-		new Helper_Audibooks().new_audiobook(this);
-	}
-
 	//Bookmarks
-	private void showBookmarks(){
+	public void showBookmarks(){
 		if(player_bookmark_flow == null) return;
 		player_bookmark_flow.getChildren().clear();
 
@@ -290,17 +278,49 @@ public class Controller implements Initializable {
 			e.printStackTrace();
 		}
 	}
-		
+	
 	//Support
-	public  File selectFolder(){
-		DirectoryChooser chooser = new DirectoryChooser();
-		chooser.setTitle("New Audiobook");
-		File defaultFolder = HOME;
-		chooser.setInitialDirectory(defaultFolder);
-		File folder = chooser.showDialog(new Stage());
-		return folder;
+	public Properties getProperties(){
+		File file = new File("dap.properties");
+		if(!file.exists()){
+			try {
+				file.createNewFile();
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+		}
+		
+		try {
+			FileInputStream in = new FileInputStream(file);
+			Properties props = new Properties();
+			props.load(in);
+			return props;
+		} catch (FileNotFoundException e) {
+			System.out.println("Properties file doesn't exist");
+			e.printStackTrace();
+			System.exit(1);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+		return null;
 	}
-
+	public void setProperties(Properties props){
+		FileOutputStream out;
+		try {
+			out = new FileOutputStream(new File("dap.properties"));
+			String comments = "Time stamp: " + Time.getTimestamp().toString(Time.TimeStamp.FORMAT_DAY_TIME_VERY_EXACT);
+			props.store(out, comments);
+			out.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
 	//Monitors
 	class Progress_monitor extends Monitor{
 

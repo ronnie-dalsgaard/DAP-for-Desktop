@@ -27,7 +27,14 @@ public class Time {
 	}
 	
 	public class TimeStamp{
-		public static final int TIME = 0, TIME_EXACT = 1, DAY = 2, DAY_EXACT = 3, DAY_TIME = 4, DAY_TIME_EXACT = 5, DAY_TIME_VERY_EXACT = 6;
+		public static final int 
+			FORMAT_TIME = 0, 
+			FORMAT_TIME_EXACT = 1, 
+			FORMAT_DAY = 2, 
+			FORMAT_DAY_EXACT = 3, 
+			FORMAT_DAY_TIME = 4, 
+			FORMAT_DAY_TIME_EXACT = 5, 
+			FORMAT_DAY_TIME_VERY_EXACT = 6;
 		private DecimalFormat df = new DecimalFormat("00");
 		private DecimalFormat df3 = new DecimalFormat("000");
 		public String milis, sec, min, hour, day, month, year;
@@ -42,13 +49,13 @@ public class Time {
 		}
 		public String toString(int format){
 			switch (format){
-				case TIME: return this.hour + ":" + this.min + ":" + this.sec;
-				case TIME_EXACT: return this.hour + ":" + this.min + ":" + this.sec + ":" + this.milis;
-				case DAY: return this.day + "/" + this.month;
-				case DAY_EXACT: return this.day + "/" + this.month + "-" + this.year;
-				case DAY_TIME: return this.hour + ":" + this.min + " " + this.day + "/" + this.month;
-				case DAY_TIME_EXACT: return this.hour + ":" + this.min + ":" + this.sec + " " + this.day + "/" + this.month + "-" + this.year;
-				case DAY_TIME_VERY_EXACT: return this.hour + ":" + this.min + ":" + this.sec + ":" + this.milis 
+				case FORMAT_TIME: return this.hour + ":" + this.min + ":" + this.sec;
+				case FORMAT_TIME_EXACT: return this.hour + ":" + this.min + ":" + this.sec + ":" + this.milis;
+				case FORMAT_DAY: return this.day + "/" + this.month;
+				case FORMAT_DAY_EXACT: return this.day + "/" + this.month + "-" + this.year;
+				case FORMAT_DAY_TIME: return this.hour + ":" + this.min + " " + this.day + "/" + this.month;
+				case FORMAT_DAY_TIME_EXACT: return this.hour + ":" + this.min + ":" + this.sec + " " + this.day + "/" + this.month + "-" + this.year;
+				case FORMAT_DAY_TIME_VERY_EXACT: return this.hour + ":" + this.min + ":" + this.sec + ":" + this.milis 
 						+ " " + this.day + "/" + this.month + "-" + this.year;
 				default: return "Bad format";
 			}
