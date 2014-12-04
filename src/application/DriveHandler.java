@@ -1,5 +1,4 @@
 package application;
-import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -7,8 +6,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.Arrays;
 
+import model.DriveFile;
+import model.DriveFileList;
 import support.ConflictResolver;
-import support.iConflictResolver;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
@@ -28,36 +28,23 @@ import com.google.api.services.drive.model.FileList;
 public class DriveHandler {
 	private static final String DH_DRIVE_FILENAME = "bookmarks.dap";
 	private static final String DH_DRIVE_FOLDERNAME = "DAP";
-	private String REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob";
-	private HttpTransport httpTransport = new NetHttpTransport();
-	private JsonFactory jsonFactory = new JacksonFactory();
-	private GoogleClientSecrets clientSecrets;
-	private Drive drive;
-
-	public static void main(String[] args) throws IOException {
-		DriveHandler handler = new DriveHandler();
-		FileList files = handler.getFilelist();
-		for(File file : files.getItems()){
-			System.out.println(file.toPrettyString() + "\n====================================\n");
-		}
-		System.out.println("DONE");
-	}
-
-
-	public DriveHandler(){
+	private static String REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob";
+	private static HttpTransport httpTransport = new NetHttpTransport();
+	private static JsonFactory jsonFactory = new JacksonFactory();
+	private static GoogleClientSecrets clientSecrets;
+	static {
 		try {
 			clientSecrets = GoogleClientSecrets.load(jsonFactory,
 					new InputStreamReader(new FileInputStream(new java.io.File("client_secrets.json"))));
+		} catch (IOException e) {
+			clientSecrets = null;
+		}
+	}
+	private Drive drive;
 
-			//FIXME
-			/* Refresh token generated aprox. 15:58 24/11-2014 */
-			String refreshToken = null;
-			refreshToken = "1/4u5CoBsbsS-K2WBJnP2JDtMLXUkJ7emG4Xyk8p1pN2QMEudVrK5jSpoR30zcRFq6";
-			if(refreshToken == null || refreshToken.isEmpty()){
-				refreshToken = getRefreshToken();
-				System.out.println("Refresh token: "+refreshToken);
-			}
-
+	public DriveHandler(String refreshToken){
+		if(refreshToken == null || refreshToken.isEmpty()) throw new IllegalArgumentException("No refresh token");
+		try {
 			GoogleCredential credential = getCredential(refreshToken);
 			drive = getService(credential);
 		} catch (IOException e) {
@@ -65,54 +52,25 @@ public class DriveHandler {
 		}
 	}
 
-
-
-	public void start(){
-		java.io.File input_file = new java.io.File("document.txt");
-		FileContent fileContent = new FileContent("text/plain", input_file);
-
+	public DriveFileList getFilelist(){
 		try {
-
-
-			//Insert a file  
-			File body = new File();
-			body.setTitle("My document");
-			body.setDescription("A test document");
-			body.setMimeType("text/plain");
-
-
-			File file = drive.files().insert(body, fileContent).execute();
-			System.out.println("File ID: " + file.getId());
-
-
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		System.out.println("Done");
-	}
-
-
-	private FileList getFilelist(){
-		try {
-			FileList files = drive.files().list().setQ("trashed = false").execute();
+			FileList list = drive.files().list().setQ("trashed = false").execute();
+			DriveFileList files = new DriveFileList(list);
 			return files;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return new FileList();
+		return new DriveFileList(new FileList());
 	}
-	private boolean hasFile(String filename){
+	public boolean hasFile(String filename){
 		if(filename == null || filename.isEmpty()) return false;
-		for(File file : getFilelist().getItems()){
+		for(DriveFile file : getFilelist().getItems()){
 			if(filename.equals(file.getTitle()))
 				return true;
 		}
 		return false;
 	}
-	private File createDAPFolder(){
+	public File createDAPFolder(){
 		try {
 			File body = new File();
 			body.setTitle(DH_DRIVE_FOLDERNAME);
@@ -126,15 +84,15 @@ public class DriveHandler {
 		}
 		return null;
 	}
-	private File createBookmarksFile(String oldData, String newData){
+	public File createBookmarksFile(String oldData, String newData){
 		try{
 			java.io.File input_file = new java.io.File("bookmarks.dap");
 			OutputStream out = new FileOutputStream(input_file);
-			
+
 			//Resove conflicts
 			ConflictResolver resolver = new ConflictResolver();
 			String resolved = resolver.resolveConflicts(oldData, newData);
-			
+
 			//Write
 			out.write(resolved.getBytes());
 			out.flush();
@@ -146,10 +104,10 @@ public class DriveHandler {
 			body.setTitle(DH_DRIVE_FILENAME);
 			body.setMimeType("text/plain");
 			body.setDescription("Bookmarks");
-			
+
 			File file = drive.files().insert(body, fileContent).execute();
 			return file;
-			
+
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -170,11 +128,14 @@ public class DriveHandler {
 		.build();
 		credential.setRefreshToken(refreshToken);
 		credential.refreshToken();
-		String accessToken = credential.getAccessToken();
-		//		System.out.println("Access Token = " + accessToken);
+		//		credential.getAccessToken();
+		/* No point saving the access token. It doesn't last long anyway */
 		return credential;
 	}
-	private String getRefreshToken() throws IOException {
+
+
+	public static String getRefreshUrl() {
+		if(clientSecrets == null) throw new IllegalArgumentException("Unable to read client client secrets statically");
 		GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
 				httpTransport, jsonFactory, clientSecrets, Arrays.asList(DriveScopes.DRIVE_FILE))
 		.setAccessType("offline")
@@ -183,14 +144,59 @@ public class DriveHandler {
 
 
 		String url = flow.newAuthorizationUrl().setRedirectUri(REDIRECT_URI).build();
-		System.out.println("Please open the following URL in your browser then type the authorization code:");
-		System.out.println("  " + url);
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		String code = br.readLine();
+		//		System.out.println("Please open the following URL in your browser then type the authorization code:");
+		//		System.out.println("  " + url);
+		//		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		//		String code = br.readLine();
 
-		GoogleTokenResponse response = flow.newTokenRequest(code).setRedirectUri(REDIRECT_URI).execute();
-		String refreshToken = response.getRefreshToken();
 
-		return refreshToken;
+
+		return url;
+	}
+	public static String getRefreshToken(String code) {
+		if(code == null || code.isEmpty()) throw new NullPointerException("No code => Unable to obtain refresh token");
+		if(clientSecrets == null) throw new IllegalArgumentException("Unable to read client client secrets statically");
+		GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
+				httpTransport, jsonFactory, clientSecrets, Arrays.asList(DriveScopes.DRIVE_FILE))
+		.setAccessType("offline")
+		.setApprovalPrompt("auto")
+		.build();
+
+
+		GoogleTokenResponse response;
+		try {
+			response = flow.newTokenRequest(code).setRedirectUri(REDIRECT_URI).execute();
+			String refreshToken = response.getRefreshToken();
+			return refreshToken;
+		} catch (IOException e) {
+			throw new NullPointerException("Unable to obtain refresh token");
+		}
 	}
 }
+
+//public void start(){
+//java.io.File input_file = new java.io.File("document.txt");
+//FileContent fileContent = new FileContent("text/plain", input_file);
+//
+//try {
+//
+//
+//	//Insert a file  
+//	File body = new File();
+//	body.setTitle("My document");
+//	body.setDescription("A test document");
+//	body.setMimeType("text/plain");
+//
+//
+//	File file = drive.files().insert(body, fileContent).execute();
+//	System.out.println("File ID: " + file.getId());
+//
+//
+//
+//} catch (IOException e) {
+//	// TODO Auto-generated catch block
+//	e.printStackTrace();
+//}
+//
+//System.out.println("Done");
+//}

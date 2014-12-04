@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+<HBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="50.0" prefWidth="151.0" styleClass="root" stylesheets="@application.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <StackPane>
+         <children>
+            <ImageView fitHeight="25.0" fitWidth="25.0" pickOnBounds="true">
+               <image>
+                  <Image url="@../../bin/images/Google%20icons/drawable-xhdpi/ic_action_download.png" />
+               </image>
+            </ImageView>
+            <Button fx:id="btn_download" mnemonicParsing="false" opacity="0.0" prefHeight="50.0" prefWidth="75.0" />
+         </children>
+      </StackPane>
+      <Label maxHeight="50.0" maxWidth="1.0" minHeight="50.0" minWidth="1.0" prefHeight="50.0" prefWidth="1.0" styleClass="v_div" stylesheets="@application.css" text="v_div" />
+      <StackPane>
+         <children>
+            <ImageView fitHeight="25.0" fitWidth="25.0" pickOnBounds="true">
+               <image>
+                  <Image url="@../../bin/images/Google%20icons/drawable-xhdpi/ic_action_upload.png" />
+               </image>
+            </ImageView>
+            <Button fx:id="btn_upload" mnemonicParsing="false" opacity="0.0" prefHeight="50.0" prefWidth="75.0" />
+         </children>
+      </StackPane>
+   </children>
+</HBox>

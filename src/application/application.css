@@ -35,6 +35,10 @@
 	-fx-font: 22px Roboto;
 }
 
+.text_small{
+	-fx-font: 12px Verdana;
+}
+
 .lbl{
 	-fx-font: 12px Roboto;
 }

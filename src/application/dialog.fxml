@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.text.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox alignment="CENTER" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.Main">
+   <children>
+      <HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="200.0" prefWidth="300.0">
+         <children>
+            <Label maxHeight="400.0" maxWidth="1.0" minHeight="100.0" minWidth="1.0" prefHeight="200.0" prefWidth="1.0" styleClass="v_div" stylesheets="@application.css" text="v_div" />
+            <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" styleClass="root" stylesheets="@application.css">
+               <children>
+                  <Label maxHeight="1.0" maxWidth="600.0" minHeight="1.0" minWidth="100.0" prefHeight="1.0" prefWidth="200.0" styleClass="h_div" stylesheets="@application.css" text="h_div" />
+                  <HBox alignment="CENTER_LEFT" prefHeight="27.0" prefWidth="300.0">
+                     <children>
+                        <Text fx:id="dialog_title" fill="WHITE" strokeType="OUTSIDE" strokeWidth="0.0" text="Text" wrappingWidth="247.13671875">
+                           <HBox.margin>
+                              <Insets left="5.0" right="5.0" />
+                           </HBox.margin>
+                        </Text>
+                        <Button fx:id="dialog_exit" mnemonicParsing="false" prefHeight="25.0" prefWidth="41.0" text="X" textAlignment="CENTER" />
+                     </children>
+                  </HBox>
+                  <Label maxHeight="1.0" maxWidth="600.0" minHeight="1.0" minWidth="100.0" prefHeight="1.0" prefWidth="200.0" styleClass="h_div" stylesheets="@application.css" text="h_div">
+                     <VBox.margin>
+                        <Insets bottom="5.0" top="5.0" />
+                     </VBox.margin></Label>
+                  <VBox fx:id="dialog_content" alignment="CENTER" prefHeight="200.0" prefWidth="100.0" />
+                  <Label maxHeight="1.0" maxWidth="600.0" minHeight="1.0" minWidth="100.0" prefHeight="1.0" prefWidth="200.0" styleClass="h_div" stylesheets="@application.css" text="h_div" />
+               </children>
+            </VBox>
+            <Label maxHeight="400.0" maxWidth="1.0" minHeight="100.0" minWidth="1.0" prefHeight="200.0" prefWidth="1.0" styleClass="v_div" stylesheets="@application.css" text="v_div" />
+         </children>
+      </HBox>
+   </children>
+</VBox>
