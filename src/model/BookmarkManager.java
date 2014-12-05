@@ -1,6 +1,7 @@
 package model;
 
-import static application.Constants.*;
+import static application.Constants.END;
+import static application.Constants.WORKINGFOLDER;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -13,7 +14,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 public class BookmarkManager extends Data{ //Singleton
 	
@@ -100,14 +100,42 @@ public class BookmarkManager extends Data{ //Singleton
 	}
 	
 	//Load and save bookmarks
+	public String constructData(){
+		ArrayList<Bookmark> bookmarks = BookmarkManager.getBookmarks();
+		Gson gson = new Gson();
+		String json = "";
+		for(Bookmark bookmark : bookmarks){
+			json += gson.toJson(bookmark) + END + "\n";
+		}
+		return json;
+	}
+	public ArrayList<Bookmark> convertToBookmarks(String content){
+		Gson gson = new Gson();
+		ArrayList<Bookmark> fetchedBookmarks = new ArrayList<Bookmark>();
+		for(String line : content.split(END)){
+			Bookmark fetched = gson.fromJson(line, Bookmark.class);
+			fetchedBookmarks.add(fetched);
+		}
+		return fetchedBookmarks;
+	}
+	
 	public ArrayList<Bookmark> loadBookmarks(){
 		File file = new File(WORKINGFOLDER, "bookmarks.dap");		
 		try {
 			FileInputStream stream = new FileInputStream(file);
 			InputStreamReader reader = new InputStreamReader(stream);
 			BufferedReader in = new BufferedReader(reader);
-			Gson gson = new Gson();
-			ArrayList<Bookmark> list = gson.fromJson(in, new TypeToken<ArrayList<Bookmark>>(){}.getType());
+			StringBuilder sb = new StringBuilder();
+			String line = in.readLine();
+			while(line != null){
+				sb.append(line);
+				line = in.readLine();
+			}
+			String content = sb.toString();
+
+			ArrayList<Bookmark> list = convertToBookmarks(content);
+			
+//			ArrayList<Bookmark> list = gson.fromJson(in, new TypeToken<ArrayList<Bookmark>>(){}.getType());
 			bookmarks.clear();
 			bookmarks.addAll(list);
 			in.close();
@@ -120,8 +148,7 @@ public class BookmarkManager extends Data{ //Singleton
 		}
 	}
 	public boolean saveBookmarks(){
-		Gson gson = new Gson();
-		String json = gson.toJson(bookmarks);
+		String json = constructData();
 		
 		//create a file in internal storage
 		File file = new File(WORKINGFOLDER, "bookmarks.dap"); //FIXME filename as constant

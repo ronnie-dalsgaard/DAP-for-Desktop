@@ -26,6 +26,6 @@ public class Constants {
 	public static final boolean PRESERVE_RATIO = true;
 	public static final boolean SMOOTH = false;
 	
-	
+	public static final String END = "/END";
 	
 }

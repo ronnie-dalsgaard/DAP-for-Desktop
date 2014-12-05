@@ -1,29 +1,32 @@
 package application;
+
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.Arrays;
 
+import model.BookmarkManager;
 import model.DriveFile;
 import model.DriveFileList;
-import support.ConflictResolver;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
 import com.google.api.client.http.FileContent;
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
-import com.google.api.services.drive.model.File;
-import com.google.api.services.drive.model.FileList;
-
 
 public class DriveHandler {
 	private static final String DH_DRIVE_FILENAME = "bookmarks.dap";
@@ -40,13 +43,13 @@ public class DriveHandler {
 			clientSecrets = null;
 		}
 	}
-	private Drive drive;
+	private Drive service;
 
 	public DriveHandler(String refreshToken){
 		if(refreshToken == null || refreshToken.isEmpty()) throw new IllegalArgumentException("No refresh token");
 		try {
 			GoogleCredential credential = getCredential(refreshToken);
-			drive = getService(credential);
+			service = getService(credential);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -54,13 +57,12 @@ public class DriveHandler {
 
 	public DriveFileList getFilelist(){
 		try {
-			FileList list = drive.files().list().setQ("trashed = false").execute();
-			DriveFileList files = new DriveFileList(list);
+			DriveFileList files = new DriveFileList(service.files().list().setQ("trashed = false").execute());
 			return files;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return new DriveFileList(new FileList());
+		return new DriveFileList();
 	}
 	public boolean hasFile(String filename){
 		if(filename == null || filename.isEmpty()) return false;
@@ -70,13 +72,13 @@ public class DriveHandler {
 		}
 		return false;
 	}
-	public File createDAPFolder(){
+	public DriveFile createDAPFolder(){
 		try {
-			File body = new File();
+			DriveFile body = new DriveFile();
 			body.setTitle(DH_DRIVE_FOLDERNAME);
 			body.setMimeType("application/vnd.google-apps.folder");
 			body.setDescription("Container for all things DAP");
-			File file = drive.files().insert(body).execute();
+			DriveFile file = new DriveFile(service.files().insert(body.getFile()).execute());
 			return file;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -84,28 +86,24 @@ public class DriveHandler {
 		}
 		return null;
 	}
-	public File createBookmarksFile(String oldData, String newData){
+	public DriveFile createBookmarksFile(String data){
 		try{
 			java.io.File input_file = new java.io.File("bookmarks.dap");
 			OutputStream out = new FileOutputStream(input_file);
 
-			//Resove conflicts
-			ConflictResolver resolver = new ConflictResolver();
-			String resolved = resolver.resolveConflicts(oldData, newData);
-
 			//Write
-			out.write(resolved.getBytes());
+			out.write(data.getBytes());
 			out.flush();
 			out.close();
 
 			//Create Google Drive file
 			FileContent fileContent = new FileContent("text/plain", input_file);
-			File body = new File();
+			DriveFile body = new DriveFile();
 			body.setTitle(DH_DRIVE_FILENAME);
 			body.setMimeType("text/plain");
 			body.setDescription("Bookmarks");
 
-			File file = drive.files().insert(body, fileContent).execute();
+			DriveFile file = new DriveFile(service.files().insert(body.getFile(), fileContent).execute());
 			return file;
 
 		} catch (IOException e) {
@@ -114,8 +112,55 @@ public class DriveHandler {
 		}
 		return null;
 	}
+	public String getContent(DriveFile file){
+		String url = file.getDownloadUrl();
+		try {
+			HttpResponse resp = service.getRequestFactory().buildGetRequest(new GenericUrl(url)).execute();
+			InputStream stream = resp.getContent();
+			BufferedReader in = new BufferedReader(new InputStreamReader(stream));
+			
+			StringBuilder sb = new StringBuilder();
+			String line = in.readLine();
+			while(line != null){
+				sb.append(line);
+				line = in.readLine();
+			}
+			String content = sb.toString();
+			return content;
+		} catch (IOException e) {
+			return null;
+		}
+	}
+	public DriveFile setContent(DriveFile file, String data){
+		String fileId = file.getFileId();
+		
+		BookmarkManager.getInstance().saveBookmarks();
+		
+		//Create content
+		try {
+			File input_file = new File("bookmarks.dap");
+//			OutputStream out = new FileOutputStream(input_file);
 
-
+			System.out.println("DATA = "+data);
+			
+//			//Write
+//			out.write(data.getBytes());
+//			out.flush();
+//			out.close();
+			
+			//Update Google Drive file
+//			File fileContent = new File("dummy");
+		    FileContent mediaContent = new FileContent("text/plain", input_file);
+		    DriveFile result = new DriveFile(service.files().update(fileId, file.getFile(), mediaContent).execute());
+		    return result;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	
 	private Drive getService(GoogleCredential credential) throws IOException {
 		Drive service = new Drive.Builder(httpTransport, jsonFactory, credential).setApplicationName("DAP").build();
 		return service;
@@ -173,30 +218,3 @@ public class DriveHandler {
 		}
 	}
 }
-
-//public void start(){
-//java.io.File input_file = new java.io.File("document.txt");
-//FileContent fileContent = new FileContent("text/plain", input_file);
-//
-//try {
-//
-//
-//	//Insert a file  
-//	File body = new File();
-//	body.setTitle("My document");
-//	body.setDescription("A test document");
-//	body.setMimeType("text/plain");
-//
-//
-//	File file = drive.files().insert(body, fileContent).execute();
-//	System.out.println("File ID: " + file.getId());
-//
-//
-//
-//} catch (IOException e) {
-//	// TODO Auto-generated catch block
-//	e.printStackTrace();
-//}
-//
-//System.out.println("Done");
-//}

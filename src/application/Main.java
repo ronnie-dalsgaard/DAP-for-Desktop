@@ -58,7 +58,9 @@ import model.Audiobook;
 import model.AudiobookManager;
 import model.Bookmark;
 import model.BookmarkManager;
+import model.DriveFile;
 import model.Track;
+import support.ConflictResolver;
 import support.Monitor;
 import support.Time;
 
@@ -376,14 +378,87 @@ public class Main extends Application {
 
 
 	
-
+	//Download
 	private void download(DriveHandler handler){
-		System.out.println("Download");
+		String content = downloadAsJSON(handler);
+		if(content == null) return;
+		ArrayList<Bookmark> bookmarks = BookmarkManager.getInstance().convertToBookmarks(content);
+		mergeBookmarks(bookmarks);
+		showBookmarks();
 	}
+	private String downloadAsJSON(DriveHandler handler){
+		DriveFile file = getBookmarksFile(handler);
+		if(file == null) return null;
+		String content = handler.getContent(file);
+		return content;
+	}
+	private void mergeBookmarks(ArrayList<Bookmark> fetchedBookmarks){
+		BookmarkManager bm = BookmarkManager.getInstance();
+		AudiobookManager am = AudiobookManager.getInstance();
+		for(Bookmark fetched : fetchedBookmarks){
+			System.out.println("Fetched: "+fetched);
+			Audiobook fetchedAudiobook = am.getAudiobook(fetched);
+			if(bm.hasBookmark(fetched)){
+				Bookmark exisisting = bm.getBookmark(fetched.getAuthor(), fetched.getAlbum());
+				Bookmark bookmark = resolveConflicts(exisisting, fetched);
+				bm.createOrUpdateBookmark(bookmark, false);
+			} else if(fetchedAudiobook != null){
+				bm.createOrUpdateBookmark(fetched, false);
+			}
+			bm.saveBookmarks();
+		}
+		
+	}
+	private Bookmark resolveConflicts(Bookmark oldData, Bookmark newData){
+		ConflictResolver resolver = new ConflictResolver();
+		Bookmark bookmark = resolver.resolveConflicts(oldData, newData);
+		return bookmark;
+	}
+	
+	//Upload
 	private void upload(DriveHandler handler){
-		System.out.println("Upload");
+		String data = BookmarkManager.getInstance().constructData();
+		DriveFile file = getBookmarksFile(handler);
+		if(file == null){
+			System.out.println("Create new file");
+			file = createBookmarksFileAndFolder(handler, data);
+		} else {
+			System.out.println("update file");
+			file = handler.setContent(file, data);			
+		}
 	}
-
+	private DriveFile createBookmarksFileAndFolder(DriveHandler handler, String data){
+		DriveFile folder = getDAPFolder(handler);
+		if(folder == null){
+			folder = handler.createDAPFolder();
+		}
+		
+		DriveFile file = handler.createBookmarksFile(data);
+		file.setParent(folder);
+		return file;
+	}
+	
+	//Common (download + upload)
+	private DriveFile getBookmarksFile(DriveHandler handler){
+		for(DriveFile file : handler.getFilelist().getItems()){
+			if("bookmarks.dap".equals(file.getTitle())){
+				return file;
+			}
+		}
+		return null;
+	}
+	private DriveFile getDAPFolder(DriveHandler handler){
+		for(DriveFile file : handler.getFilelist().getItems()){
+			if("DAP".equals(file.getTitle())
+					&& "application/vnd.google-apps.folder".equals(file.getMimiType())){
+				System.out.println(file.getTitle());
+				return file;
+			}
+		}
+		return null;
+	}
+	
+	
 	//Display functions
 	private void showAudiobook(){
 		if(currentAudiobook == null) return;
@@ -567,6 +642,7 @@ public class Main extends Application {
 
 		for(int i = 0; i < BookmarkManager.getBookmarks().size(); i++){
 			Bookmark bookmark = BookmarkManager.getBookmarks().get(i);
+			System.out.println("(Main.646) Show: "+bookmark);
 			showBookmark(bookmark);
 
 			//Add separator

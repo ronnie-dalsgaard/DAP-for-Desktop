@@ -1,10 +1,17 @@
 package support;
 
-public class ConflictResolver implements iConflictResolver<String> {
+import model.Bookmark;
+
+public class ConflictResolver implements iConflictResolver<Bookmark> {
 
 	@Override
+	public Bookmark resolveConflicts(Bookmark oldData, Bookmark newData) {
+		//FIXME The conflict isn't really resolved
+		return newData;
+	}
+	
 	public String resolveConflicts(String oldData, String newData) {
-		//FIXME conflicts are not really resolved - new is written, old is discarded
+		//FIXME The conflict isn't really resolved
 		return newData;
 	}
 

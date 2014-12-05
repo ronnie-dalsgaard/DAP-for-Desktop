@@ -10,6 +10,9 @@ public class DriveFileList {
 	public DriveFileList(FileList list){
 		this.list = list;
 	}
+	public DriveFileList(){
+		this.list = new FileList();
+	}
 	
 	public ArrayList<DriveFile> getItems(){
 		ArrayList<DriveFile> l = new ArrayList<DriveFile>();
