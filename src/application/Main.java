@@ -421,37 +421,17 @@ public class Main extends Application {
 		DriveFile file = getBookmarksFile(handler);
 		if(file == null){
 			System.out.println("Create new file");
-			file = createBookmarksFileAndFolder(handler, data);
+			file = handler.createBookmarksFile(data);
 		} else {
 			System.out.println("update file");
 			file = handler.setContent(file, data);			
 		}
-	}
-	private DriveFile createBookmarksFileAndFolder(DriveHandler handler, String data){
-		DriveFile folder = getDAPFolder(handler);
-		if(folder == null){
-			folder = handler.createDAPFolder();
-		}
-		
-		DriveFile file = handler.createBookmarksFile(data);
-		file.setParent(folder);
-		return file;
 	}
 	
 	//Common (download + upload)
 	private DriveFile getBookmarksFile(DriveHandler handler){
 		for(DriveFile file : handler.getFilelist().getItems()){
 			if("bookmarks.dap".equals(file.getTitle())){
-				return file;
-			}
-		}
-		return null;
-	}
-	private DriveFile getDAPFolder(DriveHandler handler){
-		for(DriveFile file : handler.getFilelist().getItems()){
-			if("DAP".equals(file.getTitle())
-					&& "application/vnd.google-apps.folder".equals(file.getMimiType())){
-				System.out.println(file.getTitle());
 				return file;
 			}
 		}
